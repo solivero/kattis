@@ -1,22 +1,46 @@
-// Read clues 
-// GT: set if less than prev
-// LT: set if greater than prev
-// DB: add to list
-// If LT-1 <= GT output none
-// If DB not empty
-// Sort DB
-// For element, check divisble with all previous, changing current element to answer if divisible.
-// From GT+1 to LT (excl), output num if divisible by DB product
-//
 #include<stdio.h>
 #include<iostream>
 #include<string>
 #include<vector>
 #include<algorithm>
+
+#define INFINITE "infinite"
+#define NONE "none"
+#define MAX_INT 50000
+
 using namespace std;
 
+inline int findLCM(vector<int>& nums) {
+    sort(nums.begin(), nums.end());
+    for (vector<int>::size_type i = 0; i < nums.size(); i++) {
+        for (int j = 0; j < i; j++) {
+            int reduced = nums[i];
+            if (reduced % nums[j] == 0) {
+                reduced = reduced / nums[j];
+            }
+            nums[i] = reduced;
+        }
+    }
+    int lcm = 1;
+    for (const int prime : nums)
+        lcm *= prime;
+    return lcm;
+}
+
+inline bool printMultiplesInRange(int from, int to, int factor) {
+    bool found = false;
+    for (int num = from; num < to; num++) {
+        if (num % factor == 0) {
+            if (found)
+                cout << ' ';
+            found = true;
+            cout << num;
+        }
+    }
+    return found;
+}
+
 int main() {
-    const int MAX_INT = 50000;
     int n = 0;
     while (scanf("%d\n", &n)) {
         if (n == 0)
@@ -29,45 +53,26 @@ int main() {
         int x;
         for (int i = 0; i < n; i++) {
             scanf("%s %s %d\n", firstWord, secondWord, &x);
-            //cout << firstWord << " " << x << endl;
-            if (firstWord[0] == 'l' && x < lt)
+            const bool isLessClue = firstWord[0] == 'l';
+            const bool isGreaterClue = firstWord[0] == 'g';
+            const bool isDivideClue = firstWord[0] == 'd';
+            if (isLessClue && x < lt)
                 lt = x;
-            else if (firstWord[0] == 'g' && x > gt)
+            else if (isGreaterClue && x > gt)
                 gt = x;
-            else if (firstWord[0] == 'd')
+            else if (isDivideClue)
                 divisors.push_back(x);
         }
         // Impossible bounds
         if (lt-1 <= gt)
-            cout << "none" << endl;
+            cout << NONE << endl;
         // No upper bound
         else if (lt > MAX_INT)
-            cout << "infinite" << endl;
+            cout << INFINITE << endl;
         else {
-            sort(divisors.begin(), divisors.end());
-            for (vector<int>::size_type i = 0; i < divisors.size(); i++) {
-                for (int j = 0; j < i; j++) {
-                    int reduced = divisors[i];
-                    if (divisors[i] % divisors[j] == 0) {
-                        reduced = divisors[i] / divisors[j];
-                    }
-                    divisors[i] = reduced;
-                }
-            }
-            int product = 1;
-            for (const auto prime : divisors)
-                product *= prime;
-            bool found = false;
-            for (int i = gt+1; i < lt; i++) {
-                if (i % product == 0) {
-                    if (found)
-                        cout << ' ';
-                    found = true;
-                    cout << i;
-                }
-            }
-            if (!found)
-                cout << "none";
+            int lcm = findLCM(divisors);
+            if (!printMultiplesInRange(gt + 1, lt, lcm))
+                cout << NONE;
             cout << endl;
         }
     }
